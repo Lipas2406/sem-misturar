@@ -1,0 +1,1455 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Sem Misturar</title>
+<meta name="theme-color" content="#176B45">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Sem Misturar">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="manifest" href="./manifest.json">
+<link rel="icon" href="./icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="./apple-touch-icon.png">
+<style>
+* { box-sizing: border-box; }
+html { font-size: 18px; }
+html.letra-maior { font-size: 20.7px; }
+body {
+  margin: 0;
+  background: #F7F6F2;
+  color: #201D18;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  overflow-x: hidden;
+  -webkit-text-size-adjust: 100%;
+}
+button { font-family: inherit; cursor: pointer; }
+p { margin: 0; }
+.conteudo { max-width: 480px; margin: 0 auto; padding: 10px 16px calc(100px + env(safe-area-inset-bottom)); }
+.tela { display: none; }
+.tela.ativa { display: block; animation: aparecer 0.18s ease-out; }
+@keyframes aparecer { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+@media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+
+.cartao { background: #FFFFFF; border: 1.5px solid #E3DFD5; border-radius: 14px; padding: 14px; margin: 10px 0; }
+
+/* Faixas do topo */
+.faixa { border-radius: 12px; padding: 12px; margin-bottom: 10px; font-size: 0.95rem; }
+.faixa-erro { background: #FBE9E7; border: 1.5px solid #E57373; color: #7F1D18; font-weight: 600; }
+.faixa-instalar { background: #FFFFFF; border: 1.5px solid #E7B94C; }
+.faixa-resumo { background: #E8F0FE; border: 1.5px solid #A9C4EF; }
+.faixa-botoes { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.botao-mini { min-height: 44px; padding: 6px 12px; border-radius: 10px; border: 1.5px solid #CFC9BD; background: #FFFFFF; font-size: 0.9rem; font-weight: 700; color: #201D18; }
+.faixa-resumo .botao-mini.destaque { border-color: #1D4F91; color: #1D4F91; }
+.faixa-instalar .botao-mini.destaque { background: #1D4F91; border-color: #1D4F91; color: #FFFFFF; }
+
+/* Navegacao de mes */
+.mes-linha { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr) minmax(0, 1fr); align-items: center; gap: 6px; margin: 2px 0 4px; }
+.mes-titulo { text-align: center; font-size: 1.05rem; font-weight: 800; line-height: 1.2; }
+.mes-bt { min-height: 44px; border-radius: 10px; border: 1.5px solid #CFC9BD; background: #FFFFFF; font-size: 0.9rem; font-weight: 700; color: #201D18; padding: 6px 4px; line-height: 1.15; }
+.linha-voltar-atual { text-align: center; margin-top: 6px; }
+.botao-link { background: none; border: none; color: #1D4F91; font-weight: 700; text-decoration: underline; font-size: 0.95rem; min-height: 40px; padding: 6px 10px; }
+
+/* Sobrou no negocio */
+.sobrou { text-align: center; padding: 12px; margin-top: 8px; }
+.sobrou-topo { font-size: 1rem; font-weight: 600; line-height: 1.3; }
+.sobrou-valor { display: inline-block; font-size: 2.05rem; font-weight: 800; vertical-align: -4px; margin-left: 6px; }
+.sobrou-valor.negativo { color: #B3261E; }
+.sobrou-nota { font-size: 0.9rem; color: #6B655B; margin-top: 6px; }
+.sobrou-nota.alerta { color: #B3261E; font-weight: 700; }
+
+/* Botoes grandes */
+.acoes { display: flex; flex-direction: column; gap: 8px; margin: 12px 0; }
+.botao { display: block; width: 100%; min-height: 58px; border: none; border-radius: 12px; font-size: 1.05rem; font-weight: 800; padding: 10px 14px; }
+.botao:disabled { opacity: 0.55; }
+.botao-entrou { background: #1B7A3D; color: #FFFFFF; }
+.botao-saiu { background: #B3261E; color: #FFFFFF; }
+.botao-casa { background: #1D4F91; color: #FFFFFF; }
+.botao-azul { background: #1D4F91; color: #FFFFFF; }
+.botao-verde { background: #1B7A3D; color: #FFFFFF; }
+.botao-vermelho { background: #B3261E; color: #FFFFFF; }
+.botao-escuro { background: #28241E; color: #FFFFFF; }
+.botao-claro { background: #FFFFFF; border: 1.5px solid #CFC9BD; color: #201D18; }
+
+/* Cartao do DAS */
+.das-texto { font-weight: 700; margin-bottom: 8px; }
+.das-aviso { font-weight: 800; margin-bottom: 8px; }
+.das.atencao { background: #FFF3D1; border-color: #E7B94C; }
+.das.atencao .das-aviso { color: #7A5200; }
+.das.venceu { background: #FBE9E7; border-color: #E57373; }
+.das.venceu .das-texto { color: #7F1D18; }
+.link-discreto { background: none; border: none; color: #1D4F91; text-decoration: underline; font-size: 0.9rem; font-weight: 600; min-height: 40px; padding: 4px 0; }
+
+/* Detalhes do mes */
+.linha-resumo { display: flex; justify-content: space-between; gap: 10px; padding: 7px 0; font-size: 1rem; }
+.linha-resumo strong { font-weight: 800; }
+.sub-linha { font-size: 0.9rem; color: #6B655B; text-align: right; padding-bottom: 6px; }
+.aviso-caixa { color: #B3261E; font-weight: 700; font-size: 0.95rem; margin-top: 6px; }
+
+/* Lista de anotacoes */
+.titulo-secao { font-size: 1.05rem; font-weight: 800; margin: 18px 0 8px; }
+#listaAnotacoes { background: #FFFFFF; border: 1.5px solid #E3DFD5; border-radius: 14px; padding: 4px 12px; }
+.anot-linha { display: flex; align-items: baseline; gap: 8px; width: 100%; background: none; border: none; border-bottom: 1px solid #E3DFD5; padding: 12px 2px; text-align: left; font-size: 0.95rem; color: #201D18; }
+.anot-linha:last-child { border-bottom: none; }
+.anot-data { color: #6B655B; min-width: 44px; font-size: 0.9rem; white-space: nowrap; }
+.anot-tipo { font-weight: 800; white-space: nowrap; }
+.cor-entrou { color: #1B7A3D; }
+.cor-saiu { color: #B3261E; }
+.cor-casa { color: #1D4F91; }
+.anot-desc { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.anot-valor { font-weight: 800; white-space: nowrap; }
+.lista-vazia { color: #6B655B; font-size: 0.95rem; padding: 14px 6px; }
+
+/* Formularios */
+.titulo-tela { font-size: 1.3rem; font-weight: 800; margin: 6px 0 12px; }
+.campo { margin: 12px 0; }
+.campo label { display: block; font-weight: 700; font-size: 0.95rem; margin-bottom: 6px; }
+.campo input { width: 100%; min-height: 52px; border: 1.5px solid #CFC9BD; border-radius: 10px; padding: 10px 12px; font-size: 1.05rem; background: #FFFFFF; color: #201D18; }
+.campo input:focus { outline: 2px solid #1D4F91; outline-offset: 1px; }
+.dinheiro { text-align: center; font-size: 1.7rem; font-weight: 800; }
+.aviso-erro { color: #B3261E; font-size: 0.9rem; font-weight: 700; margin-top: 6px; }
+.msg-ok { color: #1B7A3D; font-size: 0.9rem; font-weight: 700; margin-top: 6px; }
+.sugestoes { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 4px; }
+.chip { min-height: 38px; padding: 4px 12px; border-radius: 999px; border: 1.5px solid #CFC9BD; background: #FFFFFF; font-size: 0.9rem; color: #201D18; }
+.categorias { display: flex; gap: 8px; }
+.categoria { flex: 1; min-height: 52px; border-radius: 10px; border: 1.5px solid #CFC9BD; background: #FFFFFF; font-size: 0.9rem; font-weight: 700; color: #201D18; padding: 6px; }
+.categoria.selecionada { border-color: #B3261E; background: #FBE9E7; color: #7F1D18; }
+.tipos { display: flex; gap: 8px; margin: 4px 0 8px; }
+.tipo { flex: 1; min-height: 52px; border-radius: 10px; border: 1.5px solid #CFC9BD; background: #FFFFFF; font-size: 0.9rem; font-weight: 700; color: #201D18; padding: 6px 4px; }
+.tipo.sel-entrou { background: #1B7A3D; border-color: #1B7A3D; color: #FFFFFF; }
+.tipo.sel-saiu { background: #B3261E; border-color: #B3261E; color: #FFFFFF; }
+.tipo.sel-casa { background: #1D4F91; border-color: #1D4F91; color: #FFFFFF; }
+.acoes-form { display: flex; gap: 10px; margin-top: 18px; }
+.acoes-form .botao { flex: 1; }
+
+/* Mais opcoes */
+.opcao { display: flex; justify-content: space-between; align-items: center; gap: 10px; width: 100%; min-height: 56px; border-radius: 12px; border: 1.5px solid #CFC9BD; background: #FFFFFF; font-size: 0.98rem; font-weight: 700; color: #201D18; padding: 10px 14px; text-align: left; margin: 8px 0; }
+.opcao-nota { font-size: 0.9rem; color: #6B655B; margin: 4px 0 8px; }
+.faixa-msg { background: #FFF3D1; border: 1.5px solid #E7B94C; color: #7A5200; font-weight: 700; font-size: 0.9rem; border-radius: 10px; padding: 10px 12px; margin: 8px 0; }
+.estado { font-size: 0.9rem; font-weight: 700; color: #6B655B; }
+
+/* Perguntas frequentes */
+.faq-item { background: #FFFFFF; border: 1.5px solid #E3DFD5; border-radius: 12px; margin: 8px 0; overflow: hidden; }
+.faq-pergunta { display: block; width: 100%; min-height: 52px; text-align: left; background: none; border: none; padding: 12px 14px; font-size: 0.98rem; font-weight: 700; color: #201D18; }
+.faq-resposta { display: none; padding: 0 14px 12px; font-size: 0.95rem; color: #3A362E; }
+.faq-item.aberta .faq-resposta { display: block; }
+
+/* Boas-vindas */
+#tela-boas-vindas.ativa { display: flex; flex-direction: column; min-height: calc(100vh - 20px); }
+.boas-frase { font-size: 1.45rem; font-weight: 800; line-height: 1.35; margin: auto 0; padding: 24px 0; text-align: center; }
+.boas-nota { font-size: 0.98rem; font-weight: 700; margin-bottom: 12px; text-align: center; }
+
+/* Ajuda fixa */
+/* a faixa de baixo: o texto rola por tras dela, e o botao nunca fica por cima de texto */
+#barraAjuda { position: fixed; left: 0; right: 0; bottom: 0; height: calc(62px + env(safe-area-inset-bottom)); background: #F7F6F2; border-top: 1px solid #E4DFD5; z-index: 49; pointer-events: none; }
+#fabAjuda { position: fixed; right: 12px; bottom: calc(5px + env(safe-area-inset-bottom)); width: 52px; height: 52px; border-radius: 50%; background: #FFFFFF; border: 1.5px solid #CFC9BD; box-shadow: 0 2px 8px rgba(32,29,24,0.25); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 50; padding: 0; }
+.fab-simbolo { font-size: 1.1rem; font-weight: 800; line-height: 1.1; }
+.fab-texto { font-size: 0.68rem; font-weight: 700; color: #6B655B; }
+
+/* Faixa de baixo (anotado) */
+#toast { position: fixed; left: 12px; right: 88px; bottom: calc(12px + env(safe-area-inset-bottom)); background: #28241E; color: #FFFFFF; border-radius: 12px; padding: 10px 14px; display: none; align-items: center; gap: 10px; z-index: 60; font-size: 0.95rem; pointer-events: none; }
+#toast.ativa { display: flex; animation: aparecer 0.2s ease-out; }
+#btnToastDesfazer { background: none; border: none; color: #FFC94D; font-weight: 800; font-size: 0.95rem; min-height: 40px; padding: 4px 6px; white-space: nowrap; pointer-events: auto; }
+
+/* Modais */
+.fundo-modal { position: fixed; top: 0; right: 0; bottom: 0; left: 0; background: rgba(24,20,14,0.55); display: none; align-items: flex-end; justify-content: center; z-index: 100; }
+.fundo-modal.ativa { display: flex; }
+.cartao-modal { background: #FFFFFF; width: 100%; max-width: 480px; border-radius: 16px 16px 0 0; padding: 18px 16px calc(18px + env(safe-area-inset-bottom)); max-height: 85vh; overflow-y: auto; animation: subir 0.2s ease-out; }
+@keyframes subir { from { transform: translateY(24px); opacity: 0.4; } to { transform: translateY(0); opacity: 1; } }
+.titulo-modal { font-size: 1.1rem; font-weight: 800; margin-bottom: 10px; }
+.texto-modal { font-size: 0.98rem; font-weight: 600; margin-bottom: 12px; }
+.ajuda-linha { font-size: 0.95rem; margin-bottom: 10px; }
+</style>
+</head>
+<body>
+<div class="conteudo">
+
+  <section id="tela-inicio" class="tela" aria-label="Início">
+    <div id="faixaArea"></div>
+    <nav class="mes-nav" aria-label="Mês">
+      <div class="mes-linha">
+        <button type="button" class="mes-bt" id="btnMesAnterior"></button>
+        <p class="mes-titulo" id="mesTitulo"></p>
+        <button type="button" class="mes-bt" id="btnProximoMes"></button>
+      </div>
+      <p class="linha-voltar-atual" id="linhaVoltarAtual" style="display:none">
+        <button type="button" class="botao-link" id="btnVoltarAtual">Voltar para o mês atual</button>
+      </p>
+    </nav>
+    <div class="cartao sobrou">
+      <p class="sobrou-topo"><span class="sobrou-rotulo">Sobrou no negócio:</span> <span class="sobrou-valor" id="sobrouValor"></span></p>
+      <p class="sobrou-nota">É o que o negócio deu neste mês.</p>
+      <p class="sobrou-nota alerta" id="sobrouAlerta" style="display:none">Neste mês saiu mais dinheiro do que entrou.</p>
+    </div>
+    <div class="acoes">
+      <button type="button" class="botao botao-entrou" id="btnEntrou">Entrou dinheiro</button>
+      <button type="button" class="botao botao-saiu" id="btnSaiu">Saiu dinheiro</button>
+      <button type="button" class="botao botao-casa" id="btnCasa">Tirei para casa</button>
+    </div>
+    <div id="dasCartao"></div>
+    <div class="cartao">
+      <div id="resumoLinhas"></div>
+    </div>
+    <p class="titulo-secao">Anotações do mês</p>
+    <div id="listaAnotacoes"></div>
+    <button type="button" class="opcao" id="btnMaisOpcoes" style="margin-top:16px">Mais opções</button>
+  </section>
+
+  <section id="tela-anotar" class="tela" aria-label="Anotar">
+    <p class="titulo-tela" id="tituloAnotar"></p>
+    <div class="campo">
+      <label for="campoValorA">Valor</label>
+      <input type="text" id="campoValorA" class="dinheiro" inputmode="numeric" placeholder="R$ 0,00" autocomplete="off">
+      <p class="aviso-erro" id="avisoValorA" hidden>Digite o valor.</p>
+    </div>
+    <div class="campo">
+      <label for="campoDescA">Descrição (opcional)</label>
+      <input type="text" id="campoDescA" maxlength="60" autocomplete="off">
+    </div>
+    <div class="sugestoes" id="sugestoesA"></div>
+    <div class="campo" id="areaCategoriaA">
+      <label>Que conta é?</label>
+      <div class="categorias">
+        <button type="button" class="categoria" data-cat="mercadoria">Mercadoria para revender</button>
+        <button type="button" class="categoria" data-cat="outra">Outra conta do negócio</button>
+      </div>
+    </div>
+    <div class="campo">
+      <label for="campoDataA">Data</label>
+      <input type="date" id="campoDataA">
+      <p class="aviso-erro" id="avisoDataA" hidden>Escolha a data.</p>
+    </div>
+    <div class="acoes-form">
+      <button type="button" class="botao botao-claro" id="btnCancelarA">Cancelar</button>
+      <button type="button" class="botao botao-verde" id="btnSalvarA">Salvar</button>
+    </div>
+  </section>
+
+  <section id="tela-editar" class="tela" aria-label="Editar">
+    <p class="titulo-tela">Editar anotação</p>
+    <div class="tipos" id="tiposEditar">
+      <button type="button" class="tipo" data-tipo="entrou">Entrou dinheiro</button>
+      <button type="button" class="tipo" data-tipo="saiu">Saiu dinheiro</button>
+      <button type="button" class="tipo" data-tipo="casa">Tirei para casa</button>
+    </div>
+    <div class="campo">
+      <label for="campoValorE">Valor</label>
+      <input type="text" id="campoValorE" class="dinheiro" inputmode="numeric" placeholder="R$ 0,00" autocomplete="off">
+      <p class="aviso-erro" id="avisoValorE" hidden>Digite o valor.</p>
+    </div>
+    <div class="campo">
+      <label for="campoDescE">Descrição (opcional)</label>
+      <input type="text" id="campoDescE" maxlength="60" autocomplete="off">
+    </div>
+    <div class="sugestoes" id="sugestoesE"></div>
+    <div class="campo" id="areaCategoriaE">
+      <label>Que conta é?</label>
+      <div class="categorias">
+        <button type="button" class="categoria" data-cat="mercadoria">Mercadoria para revender</button>
+        <button type="button" class="categoria" data-cat="outra">Outra conta do negócio</button>
+      </div>
+    </div>
+    <div class="campo">
+      <label for="campoDataE">Data</label>
+      <input type="date" id="campoDataE">
+      <p class="aviso-erro" id="avisoDataE" hidden>Escolha a data.</p>
+    </div>
+    <div class="acoes-form">
+      <button type="button" class="botao botao-vermelho" id="btnApagarE">Apagar</button>
+      <button type="button" class="botao botao-claro" id="btnCancelarE">Cancelar</button>
+      <button type="button" class="botao botao-verde" id="btnSalvarE">Salvar</button>
+    </div>
+  </section>
+
+  <section id="tela-opcoes" class="tela" aria-label="Mais opções">
+    <p class="titulo-tela">Mais opções</p>
+    <div class="cartao">
+      <button type="button" class="opcao" id="btnEnviarResumo" style="margin:0">Enviar resumo do mês para a contadora</button>
+      <p class="opcao-nota" id="opcaoMesResumo"></p>
+    </div>
+    <div class="cartao">
+      <p class="titulo-secao" style="margin-top:0">Número da contadora</p>
+      <p class="faixa-msg" id="msgPedidoNumero" hidden>Primeiro digite o número da contadora.</p>
+      <div class="campo">
+        <input type="tel" id="campoNumero" placeholder="Ex.: 11 91234-5678" autocomplete="off">
+        <p class="aviso-erro" id="avisoNumero" hidden>Confira o número com o DDD.</p>
+        <p class="msg-ok" id="msgNumeroOk" hidden>Número guardado.</p>
+      </div>
+      <button type="button" class="botao botao-azul" id="btnSalvarNumero">Salvar número</button>
+      <p class="opcao-nota" id="numeroAtual" hidden></p>
+    </div>
+    <button type="button" class="opcao" id="btnGuardarCopia">Guardar uma cópia</button>
+    <button type="button" class="opcao" id="btnRecuperarCopia">Recuperar uma cópia</button>
+    <p class="aviso-erro" id="msgCopiaInvalida" hidden style="margin:0 4px">Este arquivo não é uma cópia do Sem Misturar.</p>
+    <button type="button" class="opcao" id="btnLetraMaior"><span>Letra maior</span><span class="estado" id="letraEstado"></span></button>
+    <button type="button" class="opcao" id="btnPassos">Como colocar na tela do celular</button>
+    <button type="button" class="opcao" id="btnVerBoasVindas">Ver as boas-vindas de novo</button>
+    <button type="button" class="opcao" id="btnFaqOpcoes">Perguntas frequentes</button>
+  </section>
+
+  <section id="tela-faq" class="tela" aria-label="Perguntas frequentes">
+    <p class="titulo-tela">Perguntas frequentes</p>
+    <div id="listaFaq"></div>
+    <button type="button" class="botao botao-escuro" id="btnFecharFaq" style="margin-top:12px">Fechar</button>
+  </section>
+
+  <section id="tela-boas-vindas" class="tela" aria-label="Boas-vindas">
+    <p class="boas-frase" id="boasFrase"></p>
+    <div>
+      <p class="boas-nota" id="boasNota" style="display:none">Antes de começar, coloque o app na tela do celular.</p>
+      <div class="acoes" style="margin-top:0">
+        <button type="button" class="botao botao-azul" id="btnBoasProximo">Próximo</button>
+        <button type="button" class="botao botao-claro" id="btnBoasPular">Pular</button>
+        <button type="button" class="botao botao-claro" id="btnBoasComoFazer" style="display:none">Como fazer</button>
+        <button type="button" class="botao botao-azul" id="btnBoasColocarAgora" style="display:none">Colocar agora</button>
+        <button type="button" class="botao botao-verde" id="btnBoasComecar" style="display:none">Começar</button>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<div id="barraAjuda" aria-hidden="true"></div>
+<button type="button" id="fabAjuda" aria-label="Ajuda"><span class="fab-simbolo">?</span><span class="fab-texto">Ajuda</span></button>
+
+<div id="toast" role="status"><span id="toastTexto"></span><button type="button" id="btnToastDesfazer">Desfazer</button></div>
+
+<div class="fundo-modal" data-modal="ajuda" role="dialog" aria-modal="true" aria-label="Ajuda">
+  <div class="cartao-modal">
+    <p class="titulo-modal">Ajuda</p>
+    <div id="ajudaLinhas"></div>
+    <div class="acoes-form">
+      <button type="button" class="botao botao-claro" id="btnAjudaFaq">Perguntas frequentes</button>
+      <button type="button" class="botao botao-escuro" id="btnAjudaFechar">Fechar</button>
+    </div>
+  </div>
+</div>
+
+<div class="fundo-modal" data-modal="passos" role="dialog" aria-modal="true" aria-label="Como colocar na tela do celular">
+  <div class="cartao-modal">
+    <p class="titulo-modal">Como colocar na tela do celular</p>
+    <p class="ajuda-linha">No Android: no Chrome, toque nos três pontinhos no canto de cima e depois em Instalar app ou Adicionar à tela inicial.</p>
+    <p class="ajuda-linha">No iPhone: no Safari, toque no botão de compartilhar (o quadrado com a seta para cima) e depois em Adicionar à Tela de Início.</p>
+    <p class="ajuda-linha">Faça isso antes de começar a anotar. Depois, abra sempre pelo ícone na tela do celular.</p>
+    <div class="acoes-form">
+      <button type="button" class="botao botao-escuro" id="btnPassosFechar">Fechar</button>
+    </div>
+  </div>
+</div>
+
+<div class="fundo-modal" data-modal="das" role="dialog" aria-modal="true" aria-label="Valor do DAS">
+  <div class="cartao-modal">
+    <p class="texto-modal">Quer anotar o valor do DAS em Saiu dinheiro?</p>
+    <div class="campo">
+      <label for="campoValorD">Valor</label>
+      <input type="text" id="campoValorD" class="dinheiro" inputmode="numeric" placeholder="R$ 0,00" autocomplete="off">
+      <p class="aviso-erro" id="avisoValorD" hidden>Digite o valor.</p>
+    </div>
+    <div class="acoes-form">
+      <button type="button" class="botao botao-verde" id="btnDasAnotar">Anotar</button>
+      <button type="button" class="botao botao-claro" id="btnDasAgoraNao">Agora não</button>
+    </div>
+  </div>
+</div>
+
+<div class="fundo-modal" data-modal="apagar" role="dialog" aria-modal="true" aria-label="Apagar anotação">
+  <div class="cartao-modal">
+    <p class="texto-modal">Apagar esta anotação? Isso não pode ser desfeito.</p>
+    <div class="acoes-form">
+      <button type="button" class="botao botao-vermelho" id="btnApagarConfirmar">Apagar</button>
+      <button type="button" class="botao botao-claro" id="btnApagarVoltar">Voltar</button>
+    </div>
+  </div>
+</div>
+
+<div class="fundo-modal" data-modal="recuperar" role="dialog" aria-modal="true" aria-label="Recuperar cópia">
+  <div class="cartao-modal">
+    <p class="texto-modal">Isso troca as anotações deste celular pelas da cópia. Continuar?</p>
+    <div class="acoes-form">
+      <button type="button" class="botao botao-azul" id="btnRecuperarConfirmar">Recuperar</button>
+      <button type="button" class="botao botao-claro" id="btnRecuperarVoltar">Voltar</button>
+    </div>
+  </div>
+</div>
+
+<input type="file" id="arquivoCopia" accept=".json,application/json" hidden>
+
+<script>
+"use strict";
+
+/* Unico modulo que lida com o que fica guardado */
+var Dados = (function () {
+  var CHAVE = "semMisturar.v1";
+  var comErro = false;
+  function padrao() {
+    return {
+      versao: 1,
+      anotacoes: [],
+      das: {},
+      resumoEnviado: {},
+      resumoDispensado: {},
+      contadora: "",
+      viuBoasVindas: false,
+      letraMaior: false,
+      faixaInstalarAte: ""
+    };
+  }
+  function ler() {
+    var d = padrao();
+    try {
+      var bruto = localStorage.getItem(CHAVE);
+      if (bruto) {
+        var p = JSON.parse(bruto);
+        if (p && typeof p === "object") {
+          var chaves = ["versao", "anotacoes", "das", "resumoEnviado", "resumoDispensado", "contadora", "viuBoasVindas", "letraMaior", "faixaInstalarAte"];
+          for (var i = 0; i < chaves.length; i++) {
+            if (typeof p[chaves[i]] !== "undefined") d[chaves[i]] = p[chaves[i]];
+          }
+        }
+      }
+    } catch (ex) { comErro = true; }
+    if (!Array.isArray(d.anotacoes)) d.anotacoes = [];
+    if (!d.das || typeof d.das !== "object" || Array.isArray(d.das)) d.das = {};
+    if (!d.resumoEnviado || typeof d.resumoEnviado !== "object" || Array.isArray(d.resumoEnviado)) d.resumoEnviado = {};
+    if (!d.resumoDispensado || typeof d.resumoDispensado !== "object" || Array.isArray(d.resumoDispensado)) d.resumoDispensado = {};
+    if (typeof d.contadora !== "string") d.contadora = "";
+    if (typeof d.faixaInstalarAte !== "string") d.faixaInstalarAte = "";
+    d.viuBoasVindas = d.viuBoasVindas === true;
+    d.letraMaior = d.letraMaior === true;
+    return d;
+  }
+  function salvar(d) {
+    var ok = true;
+    try { localStorage.setItem(CHAVE, JSON.stringify(d)); } catch (ex) { ok = false; }
+    if (!ok) comErro = true;
+    return ok;
+  }
+  function testarGravacao() {
+    try {
+      localStorage.setItem(CHAVE + ".teste", "1");
+      localStorage.removeItem(CHAVE + ".teste");
+    } catch (ex) { comErro = true; }
+  }
+  function temErro() { return comErro; }
+  return { ler: ler, salvar: salvar, testarGravacao: testarGravacao, temErro: temErro, padrao: padrao };
+})();
+
+/* Ajudantes */
+function $(id) { return document.getElementById(id); }
+function pad2(n) { return (n < 10 ? "0" : "") + n; }
+function hojeISO() {
+  var h = new Date();
+  return h.getFullYear() + "-" + pad2(h.getMonth() + 1) + "-" + pad2(h.getDate());
+}
+function isoDaqui7dias() {
+  var dt = new Date();
+  dt.setDate(dt.getDate() + 7);
+  return dt.getFullYear() + "-" + pad2(dt.getMonth() + 1) + "-" + pad2(dt.getDate());
+}
+var fmtMoeda = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
+function moeda(c) { return fmtMoeda.format((c || 0) / 100); }
+function nomeMes(ano, mesIdx, maiuscula) {
+  var n = new Date(ano, mesIdx, 1).toLocaleDateString("pt-BR", { month: "long" });
+  if (maiuscula) n = n.charAt(0).toUpperCase() + n.slice(1);
+  return n;
+}
+function dataDDMM(iso) { return iso.slice(8, 10) + "/" + iso.slice(5, 7); }
+function mesChaveDeISO(iso) { return iso.slice(0, 7); }
+function partesChave(ch) {
+  var p = ch.split("-");
+  return { ano: parseInt(p[0], 10), mes: parseInt(p[1], 10) - 1 };
+}
+function gerarId() {
+  return Date.now().toString(36) + "-" + Math.floor(Math.random() * 1000000000).toString(36);
+}
+function escapar(t) {
+  return String(t).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+function somarTipo(d, tipo, chave) {
+  var t = 0;
+  for (var i = 0; i < d.anotacoes.length; i++) {
+    var a = d.anotacoes[i];
+    if (a.tipo === tipo && mesChaveDeISO(a.data) === chave) t += a.valor;
+  }
+  return t;
+}
+function somarMercadoria(d, chave) {
+  var t = 0;
+  for (var i = 0; i < d.anotacoes.length; i++) {
+    var a = d.anotacoes[i];
+    if (a.tipo === "saiu" && a.categoria === "mercadoria" && mesChaveDeISO(a.data) === chave) t += a.valor;
+  }
+  return t;
+}
+function appInstalado() {
+  var ok = false;
+  try { ok = window.matchMedia("(display-mode: standalone)").matches; } catch (ex) {}
+  return ok || window.navigator.standalone === true;
+}
+
+var ROTULO_BOTAO = { entrou: "Entrou dinheiro", saiu: "Saiu dinheiro", casa: "Tirei para casa" };
+var ROTULO_CURTO = { entrou: "Entrou", saiu: "Saiu", casa: "Tirei para casa" };
+var EXEMPLOS = { entrou: "Ex.: venda de 2 bolos", saiu: "Ex.: compra de farinha", casa: "Ex.: mercado da semana" };
+var FRASES_BOAS = [
+  "Anote todo dinheiro que entra e sai do seu negócio.",
+  "O que você tira para a sua casa, anote em Tirei para casa. Assim o dinheiro não se mistura.",
+  "No fim do mês, veja quanto sobrou e mande o resumo para a sua contadora."
+];
+var AJUDA = {
+  inicio: [
+    "Toque em Entrou dinheiro quando receber por uma venda ou serviço.",
+    "Toque em Saiu dinheiro quando pagar alguma coisa do negócio.",
+    "Toque em Tirei para casa quando usar dinheiro do negócio para você ou para a sua casa.",
+    "Para corrigir, toque na anotação na lista.",
+    "Sobrou no negócio é o que o negócio deu no mês."
+  ],
+  anotar: [
+    "Digite o valor como no Pix do banco. Para R$ 30,00, digite 3 0 0 0.",
+    "A descrição é opcional, mas ajuda você a lembrar depois.",
+    "Toque numa sugestão para não digitar de novo.",
+    "A data já vem com hoje. Troque se foi em outro dia.",
+    "Se errar, toque em Desfazer logo depois de salvar."
+  ],
+  editar: [
+    "Mude o que estiver errado e toque em Salvar.",
+    "Anotou no lugar errado? Troque o tipo nos botões de cima.",
+    "Apagar tira a anotação de vez."
+  ],
+  opcoes: [
+    "Enviar resumo manda as contas do mês para a sua contadora pelo WhatsApp.",
+    "Guardar uma cópia salva um arquivo com tudo o que você anotou. Faça isso uma vez por mês.",
+    "Recuperar uma cópia traz esse arquivo de volta, por exemplo num celular novo."
+  ]
+};
+var PASSOS_HTML =
+  '<p class="ajuda-linha">No Android: no Chrome, toque nos três pontinhos no canto de cima e depois em Instalar app ou Adicionar à tela inicial.</p>' +
+  '<p class="ajuda-linha">No iPhone: no Safari, toque no botão de compartilhar (o quadrado com a seta para cima) e depois em Adicionar à Tela de Início.</p>' +
+  '<p class="ajuda-linha">Faça isso antes de começar a anotar. Depois, abra sempre pelo ícone na tela do celular.</p>';
+var FAQ = [
+  ["Errei um valor. Como corrijo?", "Toque na anotação na lista do Início. Corrija e toque em Salvar."],
+  ["Anotei no lugar errado. E agora?", "Toque na anotação, troque o tipo nos botões de cima e toque em Salvar."],
+  ["Qual a diferença entre Saiu dinheiro e Tirei para casa?", "Saiu dinheiro é gasto do negócio, como mercadoria, embalagem ou gás do forno. Tirei para casa é o dinheiro do negócio que você usou para você ou para a casa, como o mercado ou a luz de casa. Separar os dois mostra quanto o negócio dá de verdade."],
+  ["O que é Sobrou no negócio?", "É tudo o que entrou menos tudo o que saiu do negócio no mês. O que você tirou para casa aparece depois, em Ficou no caixa."],
+  ["Paguei uma conta do negócio com dinheiro de casa. Anoto?", "Sim, em Saiu dinheiro, porque o gasto foi do negócio. Quando puder, pague as contas do negócio com o dinheiro do negócio."],
+  ["O que é o DAS e quando vence?", "É a guia que o MEI paga todo mês. Ela vence no dia 20. Pagar em dia evita multa."],
+  ["Meus dados ficam guardados onde?", "Só neste celular. Ninguém mais vê, nem a contadora, a não ser que você mande o resumo."],
+  ["Troquei de celular. Perdi tudo?", "Se você guardou uma cópia, não. No celular novo, toque em Mais opções e em Recuperar uma cópia. Guarde uma cópia todo mês."],
+  ["Como coloco o app na tela do celular?", "PASSOS"],
+  ["Como mando o resumo para a contadora?", "Toque em Mais opções e em Enviar resumo do mês. O WhatsApp abre com a mensagem pronta. É só tocar em enviar."]
+];
+
+/* Estado */
+var pilha = [];
+var telaVisivel = null;
+var promptInstalar = null;
+var toastInfo = null;
+var cronometroToast = null;
+var mesVisto = { ano: 2026, mes: 0 };
+var tipoAnotar = "entrou";
+var categoriaAnotar = null;
+var tipoEditar = "entrou";
+var categoriaEditar = null;
+var idEditando = null;
+var passoBoasVindas = 1;
+var copiaPendente = null;
+var msgNumeroPendente = false;
+var faixaResumoChave = "";
+var alvoForcado = null;
+
+/* Historico: cada tela e cada modal entram na pilha */
+function raizAtual() { return Dados.ler().viuBoasVindas ? "inicio" : "boas-vindas"; }
+function telaNoTopo() {
+  for (var i = pilha.length - 1; i >= 0; i--) {
+    if (pilha[i].indexOf("tela:") === 0) return pilha[i].slice(5);
+  }
+  return raizAtual();
+}
+function empurrar(nome) {
+  pilha.push(nome);
+  try { history.pushState({ p: pilha.length }, ""); } catch (ex) {}
+}
+function voltar(n) {
+  if (n === 2) {
+    alvoForcado = pilha.length - 2;
+    if (alvoForcado < 0) alvoForcado = 0;
+    history.go(-2);
+    return;
+  }
+  history.back();
+}
+window.addEventListener("popstate", function (e) {
+  var alvo = (e.state && typeof e.state.p === "number") ? e.state.p : 0;
+  if (alvoForcado !== null) {
+    if (alvoForcado < alvo) alvo = alvoForcado;
+    alvoForcado = null;
+  }
+  if (alvo >= pilha.length) alvo = pilha.length - 1;
+  var fechouTela = false;
+  while (pilha.length > alvo) {
+    var topo = pilha.pop();
+    if (topo.indexOf("modal:") === 0) esconderModal(topo.slice(6));
+    else fechouTela = true;
+  }
+  if (fechouTela) resolverTela();
+});
+function resolverTela() {
+  var t = telaNoTopo();
+  if (telaVisivel !== t) mostrarTela(t);
+  else renderTelaAtual();
+}
+function abrirTela(nome, extra) {
+  empurrar("tela:" + nome);
+  mostrarTela(nome, extra);
+}
+function abrirModal(nome) {
+  empurrar("modal:" + nome);
+  mostrarModal(nome);
+}
+function substituirTopo(nome) {
+  if (pilha.length) pilha.pop();
+  pilha.push(nome);
+  try { history.replaceState({ p: pilha.length }, ""); } catch (ex) {}
+}
+
+/* Telas */
+function mostrarTela(nome, extra) {
+  var secoes = document.querySelectorAll(".tela");
+  for (var i = 0; i < secoes.length; i++) secoes[i].classList.remove("ativa");
+  var el = $("tela-" + nome);
+  if (el) el.classList.add("ativa");
+  $("fabAjuda").style.display = nome === "faq" ? "none" : "";
+  $("barraAjuda").style.display = nome === "faq" ? "none" : "";
+  telaVisivel = nome;
+  if (nome !== "inicio") { toastInfo = null; esconderToast(); }
+  if (nome === "inicio") renderInicio();
+  else if (nome === "anotar") renderAnotar(extra && extra.tipo ? extra.tipo : "entrou");
+  else if (nome === "editar") renderEditar(extra ? extra.id : null);
+  else if (nome === "opcoes") renderOpcoes();
+  else if (nome === "boas-vindas") renderBoasVindas();
+  window.scrollTo(0, 0);
+}
+function renderTelaAtual() {
+  var t = telaVisivel;
+  if (t === "inicio") renderInicio();
+  else if (t === "opcoes") renderOpcoes();
+  else if (t === "boas-vindas") renderBoasVindas();
+}
+
+/* Modais */
+function mostrarModal(nome) {
+  var el = document.querySelector('.fundo-modal[data-modal="' + nome + '"]');
+  if (!el) return;
+  if (nome === "das") {
+    $("campoValorD").value = "";
+    $("campoValorD").setAttribute("data-centavos", "0");
+    $("avisoValorD").hidden = true;
+  }
+  el.classList.add("ativa");
+}
+function esconderModal(nome) {
+  var el = document.querySelector('.fundo-modal[data-modal="' + nome + '"]');
+  if (el) el.classList.remove("ativa");
+  renderTelaAtual();
+}
+
+/* Inicio */
+function chaveAtual() { return mesVisto.ano + "-" + pad2(mesVisto.mes + 1); }
+function renderInicio() {
+  var d = Dados.ler();
+  var chave = chaveAtual();
+  var agora = new Date();
+  var chaveHoje = agora.getFullYear() + "-" + pad2(agora.getMonth() + 1);
+  var ehAtual = chave === chaveHoje;
+  $("mesTitulo").textContent = nomeMes(mesVisto.ano, mesVisto.mes, true) + " de " + mesVisto.ano;
+  var ant = new Date(mesVisto.ano, mesVisto.mes - 1, 1);
+  $("btnMesAnterior").textContent = "‹ " + nomeMes(ant.getFullYear(), ant.getMonth(), true);
+  var btnProx = $("btnProximoMes");
+  if (chave < chaveHoje) {
+    var prox = new Date(mesVisto.ano, mesVisto.mes + 1, 1);
+    btnProx.style.visibility = "";
+    btnProx.textContent = nomeMes(prox.getFullYear(), prox.getMonth(), true) + " ›";
+  } else {
+    btnProx.style.visibility = "hidden";
+  }
+  $("linhaVoltarAtual").style.display = ehAtual ? "none" : "";
+
+  var X = somarTipo(d, "entrou", chave);
+  var Y = somarTipo(d, "saiu", chave);
+  var Z = somarTipo(d, "casa", chave);
+  var M = somarMercadoria(d, chave);
+  var W = X - Y;
+  var caixa = X - Y - Z;
+
+  var elW = $("sobrouValor");
+  elW.textContent = moeda(W);
+  elW.classList.toggle("negativo", W < 0);
+  $("sobrouAlerta").style.display = W < 0 ? "" : "none";
+
+  $("dasCartao").innerHTML = htmlDas(d, chave, ehAtual);
+
+  var linhas = '<div class="linha-resumo"><span>Entrou:</span><strong>' + moeda(X) + '</strong></div>' +
+    '<div class="linha-resumo"><span>Saiu:</span><strong>' + moeda(Y) + '</strong></div>';
+  if (M > 0) linhas += '<p class="sub-linha">Desse total, mercadoria para revender: ' + moeda(M) + '</p>';
+  linhas += '<div class="linha-resumo"><span>Tirei para casa:</span><strong>' + moeda(Z) + '</strong></div>' +
+    '<div class="linha-resumo"><span>Ficou no caixa:</span><strong>' + moeda(caixa) + '</strong></div>';
+  if (caixa < 0 && W >= 0) linhas += '<p class="aviso-caixa">Você tirou para casa mais do que o negócio deu neste mês.</p>';
+  $("resumoLinhas").innerHTML = linhas;
+
+  $("listaAnotacoes").innerHTML = htmlLista(d, chave);
+  $("faixaArea").innerHTML = htmlFaixa(escolherFaixa(d));
+
+  if (toastInfo) mostrarToast();
+  else esconderToast();
+}
+function htmlLista(d, chave) {
+  var itens = [];
+  for (var i = 0; i < d.anotacoes.length; i++) {
+    if (mesChaveDeISO(d.anotacoes[i].data) === chave) itens.push(d.anotacoes[i]);
+  }
+  itens.sort(function (a, b) {
+    if (a.data !== b.data) return a.data < b.data ? 1 : -1;
+    return (b.criadoEm || 0) - (a.criadoEm || 0);
+  });
+  if (!itens.length) {
+    return '<p class="lista-vazia">Ainda não tem nada anotado neste mês. Quando receber por uma venda, toque em Entrou dinheiro.</p>';
+  }
+  var linhas = "";
+  for (var j = 0; j < itens.length; j++) {
+    var a = itens[j];
+    linhas += '<button type="button" class="anot-linha" data-id="' + escapar(a.id) + '">' +
+      '<span class="anot-data">' + dataDDMM(a.data) + '</span>' +
+      '<span class="anot-tipo cor-' + a.tipo + '">' + ROTULO_BOTAO[a.tipo] + '</span>' +
+      '<span class="anot-desc">' + escapar(a.descricao || ROTULO_BOTAO[a.tipo]) + '</span>' +
+      '<span class="anot-valor">' + moeda(a.valor) + '</span></button>';
+  }
+  return linhas;
+}
+
+/* Faixas do topo, uma de cada vez */
+function escolherFaixa(d) {
+  if (Dados.temErro()) return { tipo: "erro" };
+  if (!appInstalado()) {
+    var hoje = hojeISO();
+    if (!d.faixaInstalarAte || d.faixaInstalarAte < hoje) return { tipo: "instalar" };
+  }
+  var agora = new Date();
+  if (agora.getDate() <= 5) {
+    var ant = new Date(agora.getFullYear(), agora.getMonth() - 1, 1);
+    var chave = ant.getFullYear() + "-" + pad2(ant.getMonth() + 1);
+    if (!d.resumoEnviado[chave] && !d.resumoDispensado[chave]) return { tipo: "resumo", chave: chave };
+  }
+  return null;
+}
+function htmlFaixa(f) {
+  if (!f) return "";
+  if (f.tipo === "erro") {
+    return '<div class="faixa faixa-erro"><span>Não consegui guardar suas anotações neste celular. Elas podem se perder ao fechar o app.</span></div>';
+  }
+  if (f.tipo === "instalar") {
+    var bts = '<button type="button" class="botao-mini" data-acao="instalar-como">Como fazer</button>';
+    if (promptInstalar) bts += '<button type="button" class="botao-mini destaque" data-acao="instalar-agora">Colocar agora</button>';
+    bts += '<button type="button" class="botao-mini" data-acao="instalar-depois">Agora não</button>';
+    return '<div class="faixa faixa-instalar"><span>Coloque o app na tela do celular para não perder suas anotações.</span><span class="faixa-botoes">' + bts + '</span></div>';
+  }
+  if (f.tipo === "resumo") {
+    faixaResumoChave = f.chave;
+    var p = partesChave(f.chave);
+    var nomeCap = nomeMes(p.ano, p.mes, true);
+    var nomeMin = nomeMes(p.ano, p.mes, false);
+    return '<div class="faixa faixa-resumo"><span>' + nomeCap + ' fechou. Mande o resumo para a sua contadora.</span>' +
+      '<span class="faixa-botoes">' +
+      '<button type="button" class="botao-mini destaque" data-acao="resumo-enviar">Enviar resumo de ' + nomeMin + '</button>' +
+      '<button type="button" class="botao-mini" data-acao="resumo-depois">Agora não</button>' +
+      '</span></div>';
+  }
+  return "";
+}
+
+/* Cartao do DAS */
+function htmlDas(d, chave, ehAtual) {
+  var pago = d.das[chave];
+  var nome = nomeMes(mesVisto.ano, mesVisto.mes, false);
+  var classes = "cartao das";
+  var bPagar = '<button type="button" class="botao botao-azul" data-acao="das-paguei">Já paguei</button>';
+  var html = "";
+  if (pago) {
+    html += '<p class="das-texto">DAS de ' + nome + ' pago em ' + dataDDMM(pago) + '.</p>';
+    if (ehAtual) html += '<button type="button" class="link-discreto" data-acao="das-desfazer">Desfazer</button>';
+  } else if (!ehAtual) {
+    html += '<p class="das-texto">DAS de ' + nome + ' não foi marcado.</p>';
+    html += '<button type="button" class="botao botao-azul" data-acao="das-marcar">Marcar como pago</button>';
+  } else {
+    var dia = new Date().getDate();
+    if (dia <= 14) {
+      html += '<p class="das-texto">O DAS vence dia 20. Já pagou o deste mês?</p>' + bPagar;
+    } else if (dia <= 19) {
+      classes += " atencao";
+      var n = 20 - dia;
+      html += '<p class="das-texto">O DAS vence dia 20. Já pagou o deste mês?</p>';
+      html += '<p class="das-aviso">' + (n === 1 ? "Falta 1 dia." : "Faltam " + n + " dias.") + '</p>' + bPagar;
+    } else if (dia === 20) {
+      classes += " atencao";
+      html += '<p class="das-texto">O DAS vence dia 20. Já pagou o deste mês?</p>';
+      html += '<p class="das-aviso">Vence hoje.</p>' + bPagar;
+    } else {
+      classes += " venceu";
+      html += '<p class="das-texto">O DAS deste mês venceu dia 20. Pague o quanto antes para evitar multa.</p>' + bPagar;
+    }
+  }
+  return '<div class="' + classes + '">' + html + '</div>';
+}
+
+/* Campo de dinheiro, como no Pix */
+function ligarDinheiro(input) {
+  input.addEventListener("input", function () {
+    var dig = input.value.replace(/\D/g, "");
+    if (dig.length > 8) dig = dig.slice(0, 8);
+    var cent = dig ? parseInt(dig, 10) : 0;
+    input.value = cent > 0 ? moeda(cent) : "";
+    input.setAttribute("data-centavos", String(cent));
+  });
+}
+function valorDe(input) {
+  var v = parseInt(input.getAttribute("data-centavos") || "0", 10);
+  return isNaN(v) ? 0 : v;
+}
+
+/* Sugestoes de descricao */
+function calcularSugestoes(d, tipo) {
+  var mapa = {};
+  var lista = [];
+  for (var i = 0; i < d.anotacoes.length; i++) {
+    var a = d.anotacoes[i];
+    if (a.tipo !== tipo || !a.descricao) continue;
+    var chave = a.descricao.trim().toLowerCase();
+    if (!chave) continue;
+    if (!mapa[chave]) {
+      mapa[chave] = { texto: a.descricao.trim(), total: 0, quando: a.criadoEm || 0 };
+      lista.push(mapa[chave]);
+    }
+    mapa[chave].total++;
+    if ((a.criadoEm || 0) > mapa[chave].quando) {
+      mapa[chave].quando = a.criadoEm || 0;
+      mapa[chave].texto = a.descricao.trim();
+    }
+  }
+  lista.sort(function (x, y) {
+    if (y.total !== x.total) return y.total - x.total;
+    return y.quando - x.quando;
+  });
+  return lista.slice(0, 6);
+}
+function renderSugestoes(sufixo) {
+  var d = Dados.ler();
+  var tipo = sufixo === "A" ? tipoAnotar : tipoEditar;
+  var lista = calcularSugestoes(d, tipo);
+  var alvo = $("sugestoes" + sufixo);
+  if (!lista.length) { alvo.innerHTML = ""; alvo.style.display = "none"; return; }
+  alvo.style.display = "";
+  var html = "";
+  for (var i = 0; i < lista.length; i++) {
+    html += '<button type="button" class="chip" data-texto="' + escapar(lista[i].texto) + '">' + escapar(lista[i].texto) + '</button>';
+  }
+  alvo.innerHTML = html;
+}
+
+/* Tela de anotar */
+function renderAnotar(tipo) {
+  tipoAnotar = tipo;
+  categoriaAnotar = null;
+  $("tituloAnotar").textContent = ROTULO_BOTAO[tipo];
+  $("campoValorA").value = "";
+  $("campoValorA").setAttribute("data-centavos", "0");
+  $("avisoValorA").hidden = true;
+  $("avisoDataA").hidden = true;
+  $("campoDescA").value = "";
+  $("campoDescA").placeholder = EXEMPLOS[tipo];
+  $("areaCategoriaA").style.display = tipo === "saiu" ? "" : "none";
+  atualizarCategoria("A");
+  $("campoDataA").value = hojeISO();
+  renderSugestoes("A");
+  $("btnSalvarA").disabled = false;
+}
+function salvarAnotar() {
+  var btn = $("btnSalvarA");
+  btn.disabled = true;
+  var cent = valorDe($("campoValorA"));
+  var desc = $("campoDescA").value.trim();
+  var data = $("campoDataA").value;
+  var ok = true;
+  if (!(cent > 0)) { $("avisoValorA").hidden = false; ok = false; }
+  if (!data) { $("avisoDataA").hidden = false; ok = false; }
+  if (!ok) { btn.disabled = false; return; }
+  var d = Dados.ler();
+  var nova = {
+    id: gerarId(),
+    tipo: tipoAnotar,
+    valor: cent,
+    descricao: desc,
+    categoria: tipoAnotar === "saiu" ? categoriaAnotar : null,
+    data: data,
+    criadoEm: Date.now()
+  };
+  d.anotacoes.push(nova);
+  Dados.salvar(d);
+  var pc = partesChave(mesChaveDeISO(nova.data));
+  mesVisto = { ano: pc.ano, mes: pc.mes };
+  toastInfo = { id: nova.id, texto: "Anotado: " + ROTULO_CURTO[nova.tipo] + " " + moeda(nova.valor) + (desc ? " (" + desc + ")" : "") };
+  voltar();
+}
+
+/* Tela de editar */
+function renderEditar(id) {
+  var d = Dados.ler();
+  var a = null;
+  for (var i = 0; i < d.anotacoes.length; i++) {
+    if (d.anotacoes[i].id === id) a = d.anotacoes[i];
+  }
+  if (!a) { voltar(); return; }
+  idEditando = id;
+  tipoEditar = a.tipo;
+  categoriaEditar = a.categoria || null;
+  $("campoValorE").value = a.valor > 0 ? moeda(a.valor) : "";
+  $("campoValorE").setAttribute("data-centavos", String(a.valor));
+  $("avisoValorE").hidden = true;
+  $("avisoDataE").hidden = true;
+  $("campoDescE").value = a.descricao || "";
+  $("campoDescE").placeholder = EXEMPLOS[a.tipo];
+  $("areaCategoriaE").style.display = a.tipo === "saiu" ? "" : "none";
+  atualizarCategoria("E");
+  $("campoDataE").value = a.data;
+  marcarTipoEditar();
+  renderSugestoes("E");
+  $("btnSalvarE").disabled = false;
+}
+function marcarTipoEditar() {
+  var bts = document.querySelectorAll("#tiposEditar .tipo");
+  for (var i = 0; i < bts.length; i++) {
+    var t = bts[i].getAttribute("data-tipo");
+    bts[i].className = "tipo" + (t === tipoEditar ? " sel-" + t : "");
+  }
+}
+function trocarTipoEditar(t) {
+  tipoEditar = t;
+  if (t !== "saiu") categoriaEditar = null;
+  $("campoDescE").placeholder = EXEMPLOS[t];
+  $("areaCategoriaE").style.display = t === "saiu" ? "" : "none";
+  atualizarCategoria("E");
+  marcarTipoEditar();
+  renderSugestoes("E");
+}
+function salvarEditar() {
+  var btn = $("btnSalvarE");
+  btn.disabled = true;
+  var cent = valorDe($("campoValorE"));
+  var desc = $("campoDescE").value.trim();
+  var data = $("campoDataE").value;
+  var ok = true;
+  if (!(cent > 0)) { $("avisoValorE").hidden = false; ok = false; }
+  if (!data) { $("avisoDataE").hidden = false; ok = false; }
+  if (!ok) { btn.disabled = false; return; }
+  var d = Dados.ler();
+  for (var i = 0; i < d.anotacoes.length; i++) {
+    if (d.anotacoes[i].id === idEditando) {
+      d.anotacoes[i].tipo = tipoEditar;
+      d.anotacoes[i].valor = cent;
+      d.anotacoes[i].descricao = desc;
+      d.anotacoes[i].categoria = tipoEditar === "saiu" ? categoriaEditar : null;
+      d.anotacoes[i].data = data;
+    }
+  }
+  Dados.salvar(d);
+  var pc = partesChave(mesChaveDeISO(data));
+  mesVisto = { ano: pc.ano, mes: pc.mes };
+  idEditando = null;
+  voltar();
+}
+function confirmarApagar() {
+  var d = Dados.ler();
+  d.anotacoes = d.anotacoes.filter(function (a) { return a.id !== idEditando; });
+  Dados.salvar(d);
+  idEditando = null;
+  voltar(2);
+}
+
+/* Categorias (so no Saiu dinheiro) */
+function atualizarCategoria(prefixo) {
+  var atual = prefixo === "A" ? categoriaAnotar : categoriaEditar;
+  var bts = $("areaCategoria" + prefixo).querySelectorAll(".categoria");
+  for (var i = 0; i < bts.length; i++) {
+    bts[i].classList.toggle("selecionada", bts[i].getAttribute("data-cat") === atual);
+  }
+}
+
+/* Mais opcoes */
+function renderOpcoes() {
+  var d = Dados.ler();
+  var p = partesChave(chaveAtual());
+  $("opcaoMesResumo").textContent = "Resumo de " + nomeMes(p.ano, p.mes, false) + " de " + p.ano + ".";
+  $("msgPedidoNumero").hidden = !msgNumeroPendente;
+  $("avisoNumero").hidden = true;
+  $("msgNumeroOk").hidden = true;
+  if (d.contadora) {
+    $("numeroAtual").hidden = false;
+    $("numeroAtual").textContent = "Número guardado: " + mostrarNumero(d.contadora);
+  } else {
+    $("numeroAtual").hidden = true;
+  }
+  $("letraEstado").textContent = d.letraMaior ? "Ligado" : "Desligado";
+  if (msgNumeroPendente) {
+    msgNumeroPendente = false;
+    try { $("campoNumero").focus(); } catch (ex) {}
+  }
+}
+function mostrarNumero(salvo) {
+  var dig = salvo;
+  if (dig.indexOf("55") === 0 && (dig.length === 12 || dig.length === 13)) dig = dig.slice(2);
+  if (dig.length === 11) return dig.slice(0, 2) + " " + dig.slice(2, 7) + "-" + dig.slice(7);
+  if (dig.length === 10) return dig.slice(0, 2) + " " + dig.slice(2, 6) + "-" + dig.slice(6);
+  return salvo;
+}
+function salvarNumero() {
+  var dig = $("campoNumero").value.replace(/\D/g, "");
+  var salvo = null;
+  if (dig.length === 10 || dig.length === 11) salvo = "55" + dig;
+  else if (dig.indexOf("55") === 0 && (dig.length === 12 || dig.length === 13)) salvo = dig;
+  renderOpcoes();
+  if (!salvo) { $("avisoNumero").hidden = false; return; }
+  var d = Dados.ler();
+  d.contadora = salvo;
+  Dados.salvar(d);
+  renderOpcoes();
+  $("msgNumeroOk").hidden = false;
+}
+function textoResumo(d, chave) {
+  var p = partesChave(chave);
+  var nome = nomeMes(p.ano, p.mes, false);
+  var X = somarTipo(d, "entrou", chave);
+  var Y = somarTipo(d, "saiu", chave);
+  var M = somarMercadoria(d, chave);
+  var Z = somarTipo(d, "casa", chave);
+  var W = X - Y;
+  var linhas = [];
+  linhas.push("Resumo de " + nome + " de " + p.ano + " (Sem Misturar)");
+  linhas.push("Faturamento (entrou): " + moeda(X));
+  linhas.push("Saiu do negócio: " + moeda(Y));
+  if (M > 0) linhas.push("Desse total, mercadoria para revender: " + moeda(M));
+  linhas.push("Sobrou no negócio: " + moeda(W));
+  linhas.push("Tirei para casa: " + moeda(Z));
+  var pago = d.das[chave];
+  linhas.push("DAS de " + nome + ": " + (pago ? "pago em " + dataDDMM(pago) : "não marcado"));
+  var doMes = [];
+  for (var i = 0; i < d.anotacoes.length; i++) {
+    if (mesChaveDeISO(d.anotacoes[i].data) === chave) doMes.push(d.anotacoes[i]);
+  }
+  doMes.sort(function (a, b) {
+    if (a.data !== b.data) return a.data < b.data ? -1 : 1;
+    return (a.criadoEm || 0) - (b.criadoEm || 0);
+  });
+  if (doMes.length) {
+    linhas.push("Anotações:");
+    for (var j = 0; j < doMes.length; j++) {
+      var a = doMes[j];
+      linhas.push(dataDDMM(a.data) + " " + ROTULO_CURTO[a.tipo] + " " + moeda(a.valor) + (a.descricao ? " " + a.descricao : ""));
+    }
+  }
+  var texto = linhas.join("\n");
+  if (texto.length > 1800 && doMes.length) {
+    linhas = linhas.slice(0, linhas.length - doMes.length - 1);
+    linhas.push("Anotações:");
+    linhas.push("São " + doMes.length + " anotações. A lista completa está no celular.");
+    texto = linhas.join("\n");
+  }
+  return texto;
+}
+function enviarResumo(chave) {
+  var d = Dados.ler();
+  if (!d.contadora) {
+    msgNumeroPendente = true;
+    if (telaVisivel !== "opcoes") abrirTela("opcoes");
+    else renderOpcoes();
+    return;
+  }
+  var texto = textoResumo(d, chave);
+  var url = "https://wa.me/" + d.contadora + "?text=" + encodeURIComponent(texto);
+  var abriu = false;
+  try { abriu = !!window.open(url, "_blank"); } catch (ex) {}
+  if (!abriu) { location.href = url; }
+  d.resumoEnviado[chave] = true;
+  Dados.salvar(d);
+  renderTelaAtual();
+}
+function guardarCopia() {
+  var d = Dados.ler();
+  var blob = new Blob([JSON.stringify(d)], { type: "application/json" });
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement("a");
+  a.href = url;
+  a.download = "sem-misturar-copia-" + hojeISO() + ".json";
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(function () { URL.revokeObjectURL(url); }, 2000);
+}
+function lerCopia(arquivo) {
+  var leitor = new FileReader();
+  leitor.onload = function () {
+    var ok = false;
+    var p = null;
+    try {
+      p = JSON.parse(leitor.result);
+      if (p && typeof p === "object" && p.versao === 1 && Array.isArray(p.anotacoes)) ok = true;
+    } catch (ex) {}
+    if (!ok) {
+      $("msgPedidoNumero").hidden = true;
+      $("msgCopiaInvalida").hidden = false;
+      setTimeout(function () { $("msgCopiaInvalida").hidden = true; }, 6000);
+      return;
+    }
+    copiaPendente = normalizarCopia(p);
+    abrirModal("recuperar");
+  };
+  leitor.readAsText(arquivo);
+}
+function normalizarCopia(p) {
+  var d = Dados.padrao();
+  if (p && typeof p === "object") {
+    if (typeof p.contadora === "string") d.contadora = p.contadora;
+    if (typeof p.viuBoasVindas === "boolean") d.viuBoasVindas = p.viuBoasVindas;
+    if (typeof p.letraMaior === "boolean") d.letraMaior = p.letraMaior;
+    if (typeof p.faixaInstalarAte === "string") d.faixaInstalarAte = p.faixaInstalarAte;
+    if (p.das && typeof p.das === "object" && !Array.isArray(p.das)) d.das = p.das;
+    if (p.resumoEnviado && typeof p.resumoEnviado === "object" && !Array.isArray(p.resumoEnviado)) d.resumoEnviado = p.resumoEnviado;
+    if (p.resumoDispensado && typeof p.resumoDispensado === "object" && !Array.isArray(p.resumoDispensado)) d.resumoDispensado = p.resumoDispensado;
+    if (Array.isArray(p.anotacoes)) {
+      d.anotacoes = p.anotacoes.filter(function (a) {
+        return a && typeof a === "object" &&
+          (a.tipo === "entrou" || a.tipo === "saiu" || a.tipo === "casa") &&
+          typeof a.valor === "number" &&
+          typeof a.data === "string" && /^\d{4}-\d{2}-\d{2}$/.test(a.data);
+      }).map(function (a) {
+        return {
+          id: (typeof a.id === "string" && a.id) ? a.id : gerarId(),
+          tipo: a.tipo,
+          valor: Math.max(0, Math.round(a.valor)),
+          descricao: (typeof a.descricao === "string") ? a.descricao : "",
+          categoria: (a.categoria === "mercadoria" || a.categoria === "outra") ? a.categoria : null,
+          data: a.data,
+          criadoEm: (typeof a.criadoEm === "number") ? a.criadoEm : Date.now()
+        };
+      });
+    }
+  }
+  return d;
+}
+function confirmarRecuperar() {
+  if (!copiaPendente) { voltar(); return; }
+  Dados.salvar(copiaPendente);
+  copiaPendente = null;
+  aplicarLetra(Dados.ler().letraMaior);
+  var h = new Date();
+  mesVisto = { ano: h.getFullYear(), mes: h.getMonth() };
+  toastInfo = null;
+  voltar();
+}
+function aplicarLetra(on) {
+  document.documentElement.classList.toggle("letra-maior", !!on);
+}
+
+/* Boas-vindas */
+function renderBoasVindas() {
+  var p = passoBoasVindas;
+  $("boasFrase").textContent = FRASES_BOAS[p - 1];
+  var terceira = p === 3;
+  $("btnBoasProximo").style.display = terceira ? "none" : "";
+  $("btnBoasPular").style.display = terceira ? "none" : "";
+  $("boasNota").style.display = terceira ? "" : "none";
+  $("btnBoasComoFazer").style.display = terceira ? "" : "none";
+  $("btnBoasColocarAgora").style.display = (terceira && promptInstalar) ? "" : "none";
+  $("btnBoasComecar").style.display = terceira ? "" : "none";
+}
+function finalizarBoasVindas() {
+  var d = Dados.ler();
+  d.viuBoasVindas = true;
+  Dados.salvar(d);
+  if (pilha[pilha.length - 1] === "tela:boas-vindas") voltar();
+  else mostrarTela(raizAtual());
+}
+
+/* Faixa de anotado, com Desfazer */
+function mostrarToast() {
+  if (!toastInfo) { esconderToast(); return; }
+  $("toastTexto").textContent = toastInfo.texto;
+  $("toast").classList.add("ativa");
+  if (cronometroToast) clearTimeout(cronometroToast);
+  cronometroToast = setTimeout(esconderToast, 6000);
+}
+function esconderToast() {
+  if (cronometroToast) { clearTimeout(cronometroToast); cronometroToast = null; }
+  $("toast").classList.remove("ativa");
+}
+function desfazerUltima() {
+  if (!toastInfo) return;
+  var d = Dados.ler();
+  d.anotacoes = d.anotacoes.filter(function (a) { return a.id !== toastInfo.id; });
+  Dados.salvar(d);
+  toastInfo = null;
+  esconderToast();
+  renderInicio();
+}
+
+/* Perguntas frequentes */
+function montarFaq() {
+  var html = "";
+  for (var i = 0; i < FAQ.length; i++) {
+    var resposta = FAQ[i][1] === "PASSOS" ? PASSOS_HTML : '<p class="ajuda-linha">' + escapar(FAQ[i][1]) + '</p>';
+    html += '<div class="faq-item"><button type="button" class="faq-pergunta" aria-expanded="false">' + escapar(FAQ[i][0]) + '</button><div class="faq-resposta">' + resposta + '</div></div>';
+  }
+  $("listaFaq").innerHTML = html;
+}
+
+/* Colocar na tela do celular */
+function capturarInstalacao() {
+  window.addEventListener("beforeinstallprompt", function (e) {
+    e.preventDefault();
+    promptInstalar = e;
+    resolverTela();
+  });
+}
+function colocarAgora() {
+  if (!promptInstalar) return;
+  try { promptInstalar.prompt(); } catch (ex) {}
+  promptInstalar = null;
+  resolverTela();
+}
+
+/* Ligacao dos botoes */
+function ligarEventos() {
+  $("btnMesAnterior").addEventListener("click", function () {
+    var ant = new Date(mesVisto.ano, mesVisto.mes - 1, 1);
+    mesVisto = { ano: ant.getFullYear(), mes: ant.getMonth() };
+    renderInicio();
+  });
+  $("btnProximoMes").addEventListener("click", function () {
+    var agora = new Date();
+    var chaveHoje = agora.getFullYear() + "-" + pad2(agora.getMonth() + 1);
+    if (chaveAtual() >= chaveHoje) return;
+    var prox = new Date(mesVisto.ano, mesVisto.mes + 1, 1);
+    mesVisto = { ano: prox.getFullYear(), mes: prox.getMonth() };
+    renderInicio();
+  });
+  $("btnVoltarAtual").addEventListener("click", function () {
+    var h = new Date();
+    mesVisto = { ano: h.getFullYear(), mes: h.getMonth() };
+    renderInicio();
+  });
+  $("btnEntrou").addEventListener("click", function () { abrirTela("anotar", { tipo: "entrou" }); });
+  $("btnSaiu").addEventListener("click", function () { abrirTela("anotar", { tipo: "saiu" }); });
+  $("btnCasa").addEventListener("click", function () { abrirTela("anotar", { tipo: "casa" }); });
+  $("btnMaisOpcoes").addEventListener("click", function () { abrirTela("opcoes"); });
+
+  $("dasCartao").addEventListener("click", function (e) {
+    var b = e.target.closest("[data-acao]");
+    if (!b) return;
+    var acao = b.getAttribute("data-acao");
+    var d = Dados.ler();
+    var chave = chaveAtual();
+    if (acao === "das-paguei") {
+      d.das[chave] = hojeISO();
+      Dados.salvar(d);
+      renderInicio();
+      abrirModal("das");
+    } else if (acao === "das-desfazer") {
+      delete d.das[chave];
+      Dados.salvar(d);
+      renderInicio();
+    } else if (acao === "das-marcar") {
+      d.das[chave] = hojeISO();
+      Dados.salvar(d);
+      renderInicio();
+    }
+  });
+
+  $("listaAnotacoes").addEventListener("click", function (e) {
+    var b = e.target.closest("[data-id]");
+    if (!b) return;
+    abrirTela("editar", { id: b.getAttribute("data-id") });
+  });
+
+  $("faixaArea").addEventListener("click", function (e) {
+    var b = e.target.closest("[data-acao]");
+    if (!b) return;
+    var acao = b.getAttribute("data-acao");
+    if (acao === "instalar-como") {
+      abrirModal("passos");
+    } else if (acao === "instalar-agora") {
+      colocarAgora();
+    } else if (acao === "instalar-depois") {
+      var d = Dados.ler();
+      d.faixaInstalarAte = isoDaqui7dias();
+      Dados.salvar(d);
+      renderInicio();
+    } else if (acao === "resumo-enviar") {
+      enviarResumo(faixaResumoChave);
+    } else if (acao === "resumo-depois") {
+      var d2 = Dados.ler();
+      if (faixaResumoChave) d2.resumoDispensado[faixaResumoChave] = true;
+      Dados.salvar(d2);
+      renderInicio();
+    }
+  });
+
+  $("btnSalvarA").addEventListener("click", salvarAnotar);
+  $("btnCancelarA").addEventListener("click", function () { voltar(); });
+  $("areaCategoriaA").addEventListener("click", function (e) {
+    var b = e.target.closest("[data-cat]");
+    if (!b) return;
+    var cat = b.getAttribute("data-cat");
+    categoriaAnotar = categoriaAnotar === cat ? null : cat;
+    atualizarCategoria("A");
+  });
+  $("sugestoesA").addEventListener("click", function (e) {
+    var b = e.target.closest("[data-texto]");
+    if (!b) return;
+    $("campoDescA").value = b.getAttribute("data-texto");
+  });
+
+  var btsTipo = document.querySelectorAll("#tiposEditar .tipo");
+  for (var i = 0; i < btsTipo.length; i++) {
+    btsTipo[i].addEventListener("click", function (ev) {
+      trocarTipoEditar(ev.currentTarget.getAttribute("data-tipo"));
+    });
+  }
+  $("btnSalvarE").addEventListener("click", salvarEditar);
+  $("btnCancelarE").addEventListener("click", function () { voltar(); });
+  $("btnApagarE").addEventListener("click", function () { abrirModal("apagar"); });
+  $("areaCategoriaE").addEventListener("click", function (e) {
+    var b = e.target.closest("[data-cat]");
+    if (!b) return;
+    var cat = b.getAttribute("data-cat");
+    categoriaEditar = categoriaEditar === cat ? null : cat;
+    atualizarCategoria("E");
+  });
+  $("sugestoesE").addEventListener("click", function (e) {
+    var b = e.target.closest("[data-texto]");
+    if (!b) return;
+    $("campoDescE").value = b.getAttribute("data-texto");
+  });
+
+  $("btnEnviarResumo").addEventListener("click", function () { enviarResumo(chaveAtual()); });
+  $("btnSalvarNumero").addEventListener("click", salvarNumero);
+  $("btnGuardarCopia").addEventListener("click", guardarCopia);
+  $("btnRecuperarCopia").addEventListener("click", function () { $("arquivoCopia").click(); });
+  $("arquivoCopia").addEventListener("change", function () {
+    var arquivo = this.files[0];
+    this.value = "";
+    if (arquivo) lerCopia(arquivo);
+  });
+  $("btnLetraMaior").addEventListener("click", function () {
+    var d = Dados.ler();
+    d.letraMaior = !d.letraMaior;
+    Dados.salvar(d);
+    aplicarLetra(d.letraMaior);
+    renderOpcoes();
+  });
+  $("btnPassos").addEventListener("click", function () { abrirModal("passos"); });
+  $("btnVerBoasVindas").addEventListener("click", function () {
+    passoBoasVindas = 1;
+    abrirTela("boas-vindas");
+  });
+  $("btnFaqOpcoes").addEventListener("click", function () { abrirTela("faq"); });
+
+  $("btnBoasProximo").addEventListener("click", function () {
+    passoBoasVindas++;
+    renderBoasVindas();
+  });
+  $("btnBoasPular").addEventListener("click", finalizarBoasVindas);
+  $("btnBoasComoFazer").addEventListener("click", function () { abrirModal("passos"); });
+  $("btnBoasColocarAgora").addEventListener("click", colocarAgora);
+  $("btnBoasComecar").addEventListener("click", finalizarBoasVindas);
+
+  $("btnFecharFaq").addEventListener("click", function () { voltar(); });
+  $("listaFaq").addEventListener("click", function (e) {
+    var q = e.target.closest(".faq-pergunta");
+    if (!q) return;
+    var aberto = q.parentElement.classList.toggle("aberta");
+    q.setAttribute("aria-expanded", aberto ? "true" : "false");
+  });
+
+  $("fabAjuda").addEventListener("click", function () {
+    if (telaVisivel === "faq") return;
+    if (telaVisivel === "boas-vindas") { abrirTela("faq"); return; }
+    var linhas = AJUDA[telaVisivel] || AJUDA.inicio;
+    var html = "";
+    for (var i = 0; i < linhas.length; i++) {
+      html += '<p class="ajuda-linha">' + escapar(linhas[i]) + '</p>';
+    }
+    $("ajudaLinhas").innerHTML = html;
+    abrirModal("ajuda");
+  });
+
+  $("btnAjudaFaq").addEventListener("click", function () {
+    var el = document.querySelector('.fundo-modal[data-modal="ajuda"]');
+    if (el) el.classList.remove("ativa");
+    substituirTopo("tela:faq");
+    mostrarTela("faq");
+  });
+  $("btnAjudaFechar").addEventListener("click", function () { voltar(); });
+  $("btnPassosFechar").addEventListener("click", function () { voltar(); });
+  $("btnDasAnotar").addEventListener("click", function () {
+    var cent = valorDe($("campoValorD"));
+    if (!(cent > 0)) { $("avisoValorD").hidden = false; return; }
+    var d = Dados.ler();
+    d.anotacoes.push({
+      id: gerarId(),
+      tipo: "saiu",
+      valor: cent,
+      descricao: "DAS do mês",
+      categoria: "outra",
+      data: hojeISO(),
+      criadoEm: Date.now()
+    });
+    Dados.salvar(d);
+    voltar();
+  });
+  $("btnDasAgoraNao").addEventListener("click", function () { voltar(); });
+  $("btnApagarConfirmar").addEventListener("click", confirmarApagar);
+  $("btnApagarVoltar").addEventListener("click", function () { voltar(); });
+  $("btnRecuperarConfirmar").addEventListener("click", confirmarRecuperar);
+  $("btnRecuperarVoltar").addEventListener("click", function () { voltar(); });
+
+  $("btnToastDesfazer").addEventListener("click", desfazerUltima);
+
+  ligarDinheiro($("campoValorA"));
+  ligarDinheiro($("campoValorE"));
+  ligarDinheiro($("campoValorD"));
+}
+
+/* Inicio do app */
+function iniciar() {
+  var d = Dados.ler();
+  aplicarLetra(d.letraMaior);
+  Dados.testarGravacao();
+  try {
+    if (navigator.storage && typeof navigator.storage.persist === "function") {
+      var r = navigator.storage.persist();
+      if (r && typeof r.catch === "function") r.catch(function () {});
+    }
+  } catch (ex) {}
+  var h = new Date();
+  mesVisto = { ano: h.getFullYear(), mes: h.getMonth() };
+  montarFaq();
+  ligarEventos();
+  capturarInstalacao();
+  resolverTela();
+  try {
+    if (navigator.serviceWorker && (location.protocol === "https:" || location.protocol === "http:")) {
+      navigator.serviceWorker.register("./sw.js").catch(function () {});
+    }
+  } catch (ex) {}
+}
+document.addEventListener("DOMContentLoaded", iniciar);
+</script>
+</body>
+</html>
