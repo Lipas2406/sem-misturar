@@ -1,5 +1,5 @@
 "use strict";
-const VERSAO = "sem-misturar-v2";
+const VERSAO = "sem-misturar-v3";
 const ESSENCIAIS = ["./", "./index.html", "./manifest.json", "./icon.svg"];
 const ICONES = ["./icon-192.png", "./icon-512.png", "./apple-touch-icon.png"];
 

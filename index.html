@@ -58,6 +58,7 @@ p { margin: 0; }
 .sobrou-valor.negativo { color: #B3261E; }
 .sobrou-nota { font-size: 0.9rem; color: #6B655B; margin-top: 6px; }
 .sobrou-nota.alerta { color: #B3261E; font-weight: 700; }
+.sobrou.saldo { background: #EEF6EE; border: 1.5px solid #9CC79C; }
 
 /* Botoes grandes */
 .acoes { display: flex; flex-direction: column; gap: 8px; margin: 12px 0; }
@@ -177,6 +178,11 @@ p { margin: 0; }
         <button type="button" class="botao-link" id="btnVoltarAtual">Voltar para o mês atual</button>
       </p>
     </nav>
+    <div class="cartao sobrou saldo">
+      <p class="sobrou-topo"><span class="sobrou-rotulo">Saldo atual do negócio:</span> <span class="sobrou-valor" id="saldoValor"></span></p>
+      <p class="sobrou-nota">É o dinheiro do negócio hoje, somando todos os meses. Não muda quando você troca de mês.</p>
+      <p class="sobrou-nota alerta" id="saldoAlerta" style="display:none">O negócio está devendo: saiu e foi para casa mais do que entrou.</p>
+    </div>
     <div class="cartao sobrou">
       <p class="sobrou-topo"><span class="sobrou-rotulo">Sobrou no negócio:</span> <span class="sobrou-valor" id="sobrouValor"></span></p>
       <p class="sobrou-nota">É o que o negócio deu neste mês.</p>
@@ -466,6 +472,15 @@ function gerarId() {
 function escapar(t) {
   return String(t).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 }
+function saldoTotal(d) {
+  var t = 0;
+  for (var i = 0; i < d.anotacoes.length; i++) {
+    var a = d.anotacoes[i];
+    if (a.tipo === "entrou") t += a.valor;
+    else if (a.tipo === "saiu" || a.tipo === "casa") t -= a.valor;
+  }
+  return t;
+}
 function somarTipo(d, tipo, chave) {
   var t = 0;
   for (var i = 0; i < d.anotacoes.length; i++) {
@@ -502,6 +517,7 @@ var AJUDA = {
     "Toque em Saiu dinheiro quando pagar alguma coisa do negócio.",
     "Toque em Tirei para casa quando usar dinheiro do negócio para você ou para a sua casa.",
     "Para corrigir, toque na anotação na lista.",
+    "Saldo atual do negócio é o dinheiro do negócio hoje, somando todos os meses.",
     "Sobrou no negócio é o que o negócio deu no mês."
   ],
   anotar: [
@@ -530,6 +546,7 @@ var FAQ = [
   ["Errei um valor. Como corrijo?", "Toque na anotação na lista do Início. Corrija e toque em Salvar."],
   ["Anotei no lugar errado. E agora?", "Toque na anotação, troque o tipo nos botões de cima e toque em Salvar."],
   ["Qual a diferença entre Saiu dinheiro e Tirei para casa?", "Saiu dinheiro é gasto do negócio, como mercadoria, embalagem ou gás do forno. Tirei para casa é o dinheiro do negócio que você usou para você ou para a casa, como o mercado ou a luz de casa. Separar os dois mostra quanto o negócio dá de verdade."],
+  ["O que é Saldo atual do negócio?", "É tudo o que entrou menos tudo o que saiu e tudo o que você tirou para casa, desde a primeira anotação. Ele não muda quando você troca de mês."],
   ["O que é Sobrou no negócio?", "É tudo o que entrou menos tudo o que saiu do negócio no mês. O que você tirou para casa aparece depois, em Ficou no caixa."],
   ["Paguei uma conta do negócio com dinheiro de casa. Anoto?", "Sim, em Saiu dinheiro, porque o gasto foi do negócio. Quando puder, pague as contas do negócio com o dinheiro do negócio."],
   ["O que é o DAS e quando vence?", "É a guia que o MEI paga todo mês. Ela vence no dia 20. Pagar em dia evita multa."],
@@ -680,6 +697,12 @@ function renderInicio() {
   var M = somarMercadoria(d, chave);
   var W = X - Y;
   var caixa = X - Y - Z;
+
+  var S = saldoTotal(d);
+  var elS = $("saldoValor");
+  elS.textContent = moeda(S);
+  elS.classList.toggle("negativo", S < 0);
+  $("saldoAlerta").style.display = S < 0 ? "" : "none";
 
   var elW = $("sobrouValor");
   elW.textContent = moeda(W);
